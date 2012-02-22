@@ -5,7 +5,7 @@ require 'uri'
 
 class JenkinsRemoteTrigger
 	
-	@@jenkins = 'http://localhost:8080/jenkins'
+	@@jenkins = 'http://10.30.148.51:8080/jenkins'
 	@@modules = ['api', 'impl']
 	@@poll_internal = 5
 
