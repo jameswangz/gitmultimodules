@@ -3,7 +3,7 @@
 require 'net/http'
 require 'uri'
 
-class JenkinsRemoteTrigger
+class GitJenkinsRemoteTrigger
 	
 	@@jenkins = 'http://10.30.148.51:8080/jenkins'
 	@@modules = ['api', 'impl']
@@ -26,4 +26,6 @@ class JenkinsRemoteTrigger
 
 end
 
-JenkinsRemoteTrigger.new.run
+if __FILE__ == $0
+	GitJenkinsRemoteTrigger.new.run
+end
