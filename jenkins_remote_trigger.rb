@@ -10,8 +10,9 @@ class JenkinsRemoteTrigger
 	@@poll_internal = 5
 
 	def run
-		#while true
-			%x[git pull origin master]
+		while true
+			pull_result = %x[git pull origin master]
+			next if pull_result.strip == 'Already up-to-date.'
 			@@modules.each do |m|
 				result = %x[git log --quiet HEAD~..HEAD #{m}]
 				if not result.empty?
@@ -20,7 +21,7 @@ class JenkinsRemoteTrigger
 				end
 			end
 			sleep @@poll_internal	
-		#end
+		end
 	end
 
 end
