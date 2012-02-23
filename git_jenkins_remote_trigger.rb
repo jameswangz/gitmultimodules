@@ -5,7 +5,7 @@ require 'uri'
 
 class GitJenkinsRemoteTrigger
 	
-	@@jenkins = 'http://10.30.148.51:8080/jenkins'
+	@@jenkins = 'http://10.30.146.63:8080/jenkins'
 	@@modules2jobs = { 'api' => 'api', 'impl' => 'impl' }
 	@@poll_internal = 5
 
