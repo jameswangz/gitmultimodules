@@ -17,7 +17,8 @@ class GitJenkinsRemoteTrigger
 	def run
 		while true
 			pull_result = %x[git pull origin master]
-			next if pull_result.strip == 'Already up-to-date.'
+			puts pull_result
+			next if pull_result.include? 'Already up-to-date'
 			@@modules2jobs.each do |module_name, job_name|
 				result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 				if not result.empty?
