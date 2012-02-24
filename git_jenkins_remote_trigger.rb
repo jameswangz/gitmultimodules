@@ -9,7 +9,7 @@ class GitJenkinsRemoteTrigger
 	@@modules2jobs = { 'api' => 'api', 'impl' => 'impl' }
 	@@poll_internal = 5
 
-	@@auth_required = true
+	@@auth_required = false
 	# following fileds only required if @@auth_required is true
 	@@user_name = 'james'
 	@@api_token = 'dcebe4f09bdc324d2d9567780f04a0c1' 
