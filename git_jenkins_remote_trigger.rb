@@ -18,7 +18,7 @@ require 'uri'
 ##
 class GitJenkinsRemoteTrigger
 	
-	def initialize(jenkins, module_job_mappings, running_options = { :only_once => true }, auth_options = { :required = false })	
+	def initialize(jenkins, module_job_mappings, running_options = { :only_once => true }, auth_options = { :required => false })	
 		@jenkins = jenkins
 		@module_job_mappings = module_job_mappings
 		@running_options = running_options
