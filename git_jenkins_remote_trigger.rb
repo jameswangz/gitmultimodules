@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require 'net/http'
 require 'uri'
 
@@ -61,7 +59,7 @@ class GitJenkinsRemoteTrigger
 				Net::HTTP.get_print uri 
 			end
 		rescue => e
-			puts "Trigger error, #{e}"
+			puts "Trigger error!!! -> #{e}"
 		end
 	end
 
