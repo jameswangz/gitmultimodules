@@ -3,38 +3,57 @@
 require 'net/http'
 require 'uri'
 
+##
+# This script is used to trigger jenkins jobs remotely based on a 'shared' git reposiotry, to make it works you must put this file
+# in the respository's root folder, there are 2 ways to create a shared git repository
+#
+#   1. Configure the workspaceDir in JENKINS_HOME/config.xml, set the value to the git repository folder 
+#   2. Create soft links for all jobs, source ->  git repository folder, target -> job/workspace 
+# 
+# We may create a Jenkins plugin later but it works currently. 
+# 
+# @author James (james.wang.z81@gmail.com)
+# @since Feb 22, 2012
+#
+##
 class GitJenkinsRemoteTrigger
 	
-	@@jenkins = 'http://localhost:8080/jenkins'
-	@@modules2jobs = { 'api' => 'api', 'impl' => 'impl' }
-	@@poll_internal = 5
+	def initialize(jenkins, module_job_mappings, running_options = { :only_once => true }, auth_options = { :required = false })	
+		@jenkins = jenkins
+		@module_job_mappings = module_job_mappings
+		@running_options = running_options
+		@auth_options = auth_options		
+	end
 
-	@@auth_required = false
-	# following fileds only required if @@auth_required is true
-	@@user_name = 'james'
-	@@api_token = 'dcebe4f09bdc324d2d9567780f04a0c1' 
-		
 	def run
-		while true
-			pull_result = %x[git pull origin master]
-			puts pull_result
-			next if pull_result.include? 'Already up-to-date'
-			@@modules2jobs.each do |module_name, job_name|
-				result = %x[git log --quiet HEAD~..HEAD #{module_name}]
-				if not result.empty?
-					trigger job_name 
-				end
+		if running_options[:only_once]
+			run_once
+		else	
+			while true
+				run_once
+				sleep running_options[:internal] 
 			end
-			sleep @@poll_internal	
+		end
+	end
+
+	def run_once
+		pull_result = %x[git pull origin master]
+		puts pull_result
+		next if pull_result.include? 'Already up-to-date'
+		@module_job_mappings.each do |module_name, job_name|
+			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
+			if not result.empty?
+				trigger job_name 
+			end
 		end
 	end
 
 	def trigger(job_name)
 		puts "triggering job #{job_name}"
-		uri = URI("#{@@jenkins}/job/#{job_name}/build")			
-		if @@auth_required
+		uri = URI("#{@jenkins}/job/#{job_name}/build")			
+		if auth_options[:required] 
 			req = Net::HTTP::Get.new(uri.request_uri)
-			req.basic_auth @@user_name, @@api_token
+			req.basic_auth auth_options[:username] auth_options[:api_token] 
 			res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
 			puts res.body
 		else
@@ -45,5 +64,9 @@ class GitJenkinsRemoteTrigger
 end
 
 if __FILE__ == $0
-	GitJenkinsRemoteTrigger.new.run
+	jenkins = 'http://localhost:8080/jenkins'
+	module_job_mappings = { 'api' => 'api', 'impl' => 'impl' }
+	running_options = { :only_once => true, :interval => 5 }
+	auth_options = { :required => false, :username => 'james', :api_token => 'dcebe4f09bdc324d2d9567780f04a0c1' }
+	GitJenkinsRemoteTrigger.new(jenkins, module_job_mappings, running_options, auth_options).run
 end
