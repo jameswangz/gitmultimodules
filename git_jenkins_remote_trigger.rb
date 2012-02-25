@@ -26,12 +26,12 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def run
-		if running_options[:only_once]
+		if @running_options[:only_once]
 			run_once
 		else	
 			while true
 				run_once
-				sleep running_options[:internal] 
+				sleep @running_options[:interval] 
 			end
 		end
 	end
@@ -39,7 +39,7 @@ class GitJenkinsRemoteTrigger
 	def run_once
 		pull_result = %x[git pull origin master]
 		puts pull_result
-		next if pull_result.include? 'Already up-to-date'
+		return if pull_result.include? 'Already up-to-date'
 		@module_job_mappings.each do |module_name, job_name|
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			if not result.empty?
@@ -53,7 +53,7 @@ class GitJenkinsRemoteTrigger
 		uri = URI("#{@jenkins}/job/#{job_name}/build")			
 		if auth_options[:required] 
 			req = Net::HTTP::Get.new(uri.request_uri)
-			req.basic_auth auth_options[:username] auth_options[:api_token] 
+			req.basic_auth auth_options[:username], auth_options[:api_token] 
 			res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
 			puts res.body
 		else
@@ -66,7 +66,7 @@ end
 if __FILE__ == $0
 	jenkins = 'http://localhost:8080/jenkins'
 	module_job_mappings = { 'api' => 'api', 'impl' => 'impl' }
-	running_options = { :only_once => true, :interval => 5 }
+	running_options = { :only_once => false, :interval => 5 }
 	auth_options = { :required => false, :username => 'james', :api_token => 'dcebe4f09bdc324d2d9567780f04a0c1' }
 	GitJenkinsRemoteTrigger.new(jenkins, module_job_mappings, running_options, auth_options).run
 end
