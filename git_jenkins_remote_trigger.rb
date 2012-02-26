@@ -38,6 +38,10 @@ class GitJenkinsRemoteTrigger
 		pull_result = %x[git pull origin master]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
+		if pull_result.empty?
+			puts 'Error! Couldn\'t pull from git repository,  please check your network setting and SSH key.'
+			return
+		end
 		@module_job_mappings.each do |module_name, job_name|
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			if not result.empty?
