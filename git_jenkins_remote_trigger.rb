@@ -10,7 +10,7 @@ require 'uri'
 # 
 # We may create a Jenkins plugin later but it works currently. 
 # 
-# @author James (james.wang.z81@gmail.com)
+# @author James Wang (james.wang.z81@gmail.com)
 # @since Feb 22, 2012
 #
 ##
