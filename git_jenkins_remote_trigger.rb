@@ -46,7 +46,7 @@ class GitJenkinsRemoteTrigger
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			puts "result [#{result}]"
 			if not result.empty?
-				result =~ /commit\s+(.+).+/
+				result =~ /commit\s+(.+)/
 				puts "commit id #{$1}"
 				trigger job_name, $1 
 			end
