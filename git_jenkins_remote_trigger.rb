@@ -45,27 +45,29 @@ class GitJenkinsRemoteTrigger
 		@module_job_mappings.each do |module_name, job_name|
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			if not result.empty?
-				trigger job_name 
+				result =~ /commit\s+(.+).+/
+				trigger job_name, $1 
 			end
 		end
 	end
 
-	def trigger(job_name)
+	def trigger(job_name, commit_id)
 		puts "triggering job #{job_name}"
-		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?GIT_COMMIT_ID=from_remote")			
+		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?GIT_COMMIT_ID=#{commit_id}")			
 		puts uri
-		begin
-			if @auth_options[:required] 
-				req = Net::HTTP::Get.new(uri.request_uri)
-				req.basic_auth @auth_options[:username], @auth_options[:api_token] 
-				res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-				puts res.body
-			else
-				Net::HTTP.get_print uri 
-			end
-		rescue => e
-			puts "Trigger error!!! -> #{e}"
-		end
+		
+		#begin
+		#	if @auth_options[:required] 
+		#		req = Net::HTTP::Get.new(uri.request_uri)
+		#		req.basic_auth @auth_options[:username], @auth_options[:api_token] 
+		#		res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+		#		puts res.body
+		#	else
+		#		Net::HTTP.get_print uri 
+		#	end
+		#rescue => e
+		#	puts "Trigger error!!! -> #{e}"
+		#end
 	end
 
 end
