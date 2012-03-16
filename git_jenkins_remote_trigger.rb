@@ -52,7 +52,8 @@ class GitJenkinsRemoteTrigger
 
 	def trigger(job_name)
 		puts "triggering job #{job_name}"
-		uri = URI("#{@jenkins}/job/#{job_name}/build")			
+		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?GIT_COMMIT_ID=from_remote")			
+		puts uri
 		begin
 			if @auth_options[:required] 
 				req = Net::HTTP::Get.new(uri.request_uri)
