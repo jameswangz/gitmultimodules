@@ -3,7 +3,7 @@ require 'uri'
 
 ##
 # This script is used to trigger jenkins jobs remotely based on a 'shared' git reposiotry, to make it works you must put this file
-# in the respository's root folder, there are 2 ways to create a shared git repository
+# in the respository's root folder, as far as we know, there are 2 ways to create a shared git repository
 #
 #   1. Configure the workspaceDir in JENKINS_HOME/config.xml, set the value to the git repository folder 
 #   2. Create soft links for all jobs, source ->  git repository folder, target -> job/workspace 
@@ -16,11 +16,18 @@ require 'uri'
 ##
 class GitJenkinsRemoteTrigger
 	
-	def initialize(jenkins, module_job_mappings, running_options = { :only_once => true }, auth_options = { :required => false })	
+	def initialize(
+		jenkins, 
+		module_job_mappings, 
+		running_options = { :only_once => true }, 
+		auth_options = { :required => false },
+		other_options = { :COMMIT_ID_PARAM_NAME => 'GIT_COMMIT_ID'	}
+	)	
 		@jenkins = jenkins
 		@module_job_mappings = module_job_mappings
 		@running_options = running_options
 		@auth_options = auth_options		
+		@other_options = other_options
 	end
 
 	def run
@@ -55,7 +62,7 @@ class GitJenkinsRemoteTrigger
 
 	def trigger(job_name, commit_id)
 		puts "triggering job #{job_name}"
-		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?GIT_COMMIT_ID=#{commit_id}")			
+		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?#{@other_options[:COMMIT_ID_PARAM_NAME]}=#{commit_id}")			
 		puts uri
 		begin
 			if @auth_options[:required] 
