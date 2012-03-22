@@ -51,7 +51,7 @@ class GitJenkinsRemoteTrigger
 		end
 		@module_job_mappings.each do |module_name, job_name|
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
-			puts "result [#{result}]"
+			puts "Result of #{module_name} [#{result}]"
 			if not result.empty?
 				result =~ /commit\s+(.+)/
 				puts "commit id #{$1}"
