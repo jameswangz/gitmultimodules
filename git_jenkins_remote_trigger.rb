@@ -1,11 +1,14 @@
 require 'net/http'
 require 'uri'
+require 'fileutils'
+require 'yaml'
 
 ##
 # This script is used to trigger jenkins jobs remotely based on a 'shared' git reposiotry, to make it works you must put this file
 # in the respository's root folder, as far as we know, there are 2 ways to create a shared git repository
 #
-#   1. Configure the workspaceDir in JENKINS_HOME/config.xml, set the value to the git repository folder 
+#   1. Configure the workspaceDir in JENKINS_HOME/config.xml, set the value to the git repository folder, this solution
+#      only works for the situation that the Jenkins server is dedicated for only 1 project. 
 #   2. Create soft links for all jobs, source ->  git repository folder, target -> job/workspace 
 # 
 # We may create a Jenkins plugin later but it works currently. 
@@ -28,6 +31,7 @@ class GitJenkinsRemoteTrigger
 		@running_options = running_options
 		@auth_options = auth_options		
 		@other_options = other_options
+		@working_dir = File.expand_path('.github_shared_repository', '~')
 	end
 
 	def run
@@ -42,6 +46,7 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def run_once
+		create_working_dir_if_required
 		pull_result = %x[git pull origin master]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
@@ -50,13 +55,40 @@ class GitJenkinsRemoteTrigger
 			return
 		end
 		@module_job_mappings.each do |module_name, job_name|
+			working_file = File.expand_path("#{job_name}.yml", @working_dir)
+			if !File.exists? working_file
+				puts "Creating working file #{working_file}"
+				intial_build_data = { 
+					'current_build' => 'HEAD',
+					'changes_since_last_build' => []
+				}	
+				File.open(working_file, 'w') { |f| f.write(intial_build_data.to_yaml) }
+			end	
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			puts "Result of #{module_name} [#{result}]"
 			if not result.empty?
 				result =~ /commit\s+(.+)/
-				puts "commit id #{$1}"
-				trigger job_name, $1 
+				commit_id = $1
+
+				build_data = YAML.load_file(working_file)
+				last_build = build_data['current_build']
+				changes_since_last_build_raw_data = %x[git log --quiet #{last_build}..HEAD #{module_name}]
+				#puts "changes_since_last_build [#{changes_since_last_build_raw_data}]"
+				changes_since_last_build = changes_since_last_build_raw_data.scan(/(commit.*)*/m) 
+				puts changes_since_last_build
+
+				build_data['current_build'] = commit_id
+				File.open(working_file, 'w') { |f| YAML.dump(build_data, f) }		
+				
+				#trigger job_name, commit_id
 			end
+		end
+	end
+
+	def create_working_dir_if_required
+		if !File.exists? @working_dir
+			puts "Creating working dir #{@working_dir}"
+			FileUtils.mkdir(@working_dir)
 		end
 	end
 
@@ -77,5 +109,6 @@ class GitJenkinsRemoteTrigger
 			puts "Trigger error!!! -> #{e}"
 		end
 	end
+
 
 end
