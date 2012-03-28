@@ -1,5 +1,5 @@
-require 'net/http'
 require 'uri'
+require 'net/http'
 require 'fileutils'
 require 'yaml'
 
@@ -17,8 +17,18 @@ require 'yaml'
 # @since Feb 22, 2012
 #
 ##
+
+module LogAnalyzer
+	def analyze_multiple_commit_logs(raw_data)
+		array = raw_data.scan(/commit\s+(.*)\s*Author:\s+(.*)\s*Date:\s+(.*)\s*(.*)/)
+		hashs = array.collect { |elements| { 'commit_id' => elements[0], 'author' => elements[1], 'date' => elements[2], 'message' => elements[3] }  }
+	end	
+end
+
 class GitJenkinsRemoteTrigger
-	
+
+	include LogAnalyzer
+
 	def initialize(
 		jenkins, 
 		module_job_mappings, 
@@ -32,6 +42,14 @@ class GitJenkinsRemoteTrigger
 		@auth_options = auth_options		
 		@other_options = other_options
 		@working_dir = File.expand_path('.github_shared_repository', '~')
+		create_working_dir_if_required
+	end
+
+	def create_working_dir_if_required
+		if !File.exists? @working_dir
+			puts "Creating working dir #{@working_dir}"
+			FileUtils.mkdir(@working_dir)
+		end
 	end
 
 	def run
@@ -46,51 +64,56 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def run_once
-		create_working_dir_if_required
 		pull_result = %x[git pull origin master]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
 		if pull_result.empty?
-			puts 'Error! Couldn\'t pull from git repository,  please check your network setting and SSH key.'
+			puts 'Error! Couldn\'t pull from git repository, please check your network setting and SSH key.'
 			return
 		end
 		@module_job_mappings.each do |module_name, job_name|
-			working_file = File.expand_path("#{job_name}.yml", @working_dir)
-			if !File.exists? working_file
-				puts "Creating working file #{working_file}"
-				intial_build_data = { 
-					'current_build' => 'HEAD',
-					'changes_since_last_build' => []
-				}	
-				File.open(working_file, 'w') { |f| f.write(intial_build_data.to_yaml) }
-			end	
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			puts "Result of #{module_name} [#{result}]"
 			if not result.empty?
 				result =~ /commit\s+(.+)/
 				commit_id = $1
-
-				build_data = YAML.load_file(working_file)
-				last_build = build_data['current_build']
-				changes_since_last_build_raw_data = %x[git log --quiet #{last_build}..HEAD #{module_name}]
-				#puts "changes_since_last_build [#{changes_since_last_build_raw_data}]"
-				changes_since_last_build = changes_since_last_build_raw_data.scan(/(commit.*)*/m) 
-				puts changes_since_last_build
-
-				build_data['current_build'] = commit_id
-				File.open(working_file, 'w') { |f| YAML.dump(build_data, f) }		
-				
-				#trigger job_name, commit_id
+				record_recent_builds(module_name, job_name, commit_id)
+				trigger job_name, commit_id
 			end
 		end
 	end
 
-	def create_working_dir_if_required
-		if !File.exists? @working_dir
-			puts "Creating working dir #{@working_dir}"
-			FileUtils.mkdir(@working_dir)
+	def record_recent_builds(module_name, job_name, commit_id)
+		working_file = File.expand_path("#{job_name}.yml", @working_dir)
+		
+		# initialize working file
+		if !File.exists? working_file
+			puts "Creating working file #{working_file}"
+			initial_build_data = { 
+				'recent_builds' => [
+					{ 'build_id' => 'NONE', 'changes_since_last_build' => [] }
+				] 
+			}	
+			File.open(working_file, 'w') { |f| f.write(initial_build_data.to_yaml) }
+		end	
+		
+		build_data = YAML.load_file(working_file)
+		last_build_id = build_data['recent_builds'][0]['build_id']
+		if last_build_id == 'NONE'
+			command = "git log --quiet #{module_name}"
+		else
+			command = "git log --quiet #{last_build_id}..HEAD #{module_name}"
 		end
-	end
+		logs_raw_data = %x[#{command}]
+		changes_since_last_build = analyze_multiple_commit_logs(logs_raw_data)
+		puts "changes_since_last_build #{changes_since_last_build}"
+		return if changes_since_last_build.empty?
+		build_data['recent_builds'].unshift({ 'build_id' => commit_id, 'changes_since_last_build' => changes_since_last_build })
+		if (build_data['recent_builds'].length > @other_options[:MAX_TRACKED_BUILDS]) 
+			build_data['recent_builds'] = build_data['recent_builds'].take(@other_options[:MAX_TRACKED_BUILDS])
+		end	
+		File.open(working_file, 'w') { |f| YAML.dump(build_data, f) }		
+	end	
 
 	def trigger(job_name, commit_id)
 		puts "triggering job #{job_name}"
@@ -110,5 +133,5 @@ class GitJenkinsRemoteTrigger
 		end
 	end
 
-
 end
+
