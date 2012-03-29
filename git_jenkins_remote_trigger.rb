@@ -72,21 +72,20 @@ class GitJenkinsRemoteTrigger
 			return
 		end
 		@module_job_mappings.each do |module_name, job_name|
+			working_file = initialize_working_file(job_name)
 			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
 			puts "Result of #{module_name} [#{result}]"
 			if not result.empty?
 				result =~ /commit\s+(.+)/
 				commit_id = $1
-				record_recent_builds(module_name, job_name, commit_id)
+				record_recent_builds(module_name, working_file, commit_id)
 				trigger job_name, commit_id
 			end
 		end
 	end
 
-	def record_recent_builds(module_name, job_name, commit_id)
+	def initialize_working_file(job_name)
 		working_file = File.expand_path("#{job_name}.yml", @working_dir)
-		
-		# initialize working file
 		if !File.exists? working_file
 			puts "Creating working file #{working_file}"
 			initial_build_data = { 
@@ -96,7 +95,10 @@ class GitJenkinsRemoteTrigger
 			}	
 			File.open(working_file, 'w') { |f| f.write(initial_build_data.to_yaml) }
 		end	
-		
+		working_file
+	end
+
+	def record_recent_builds(module_name, working_file, commit_id)
 		build_data = YAML.load_file(working_file)
 		last_build_id = build_data['recent_builds'][0]['build_id']
 		if last_build_id == 'NONE'
@@ -112,7 +114,7 @@ class GitJenkinsRemoteTrigger
 		if (build_data['recent_builds'].length > @other_options[:MAX_TRACKED_BUILDS]) 
 			build_data['recent_builds'] = build_data['recent_builds'].take(@other_options[:MAX_TRACKED_BUILDS])
 		end	
-		File.open(working_file, 'w') { |f| YAML.dump(build_data, f) }		
+		File.open(working_file, 'w') { |f| f.write(build_data.to_yaml) }
 	end	
 
 	def trigger(job_name, commit_id)
