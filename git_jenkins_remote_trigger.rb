@@ -20,7 +20,7 @@ require 'yaml'
 
 module LogAnalyzer
 	def analyze_multiple_commit_logs(raw_data)
-		array = raw_data.scan(/commit\s+(.*?)\n+Author:\s+(.*?)\n+Date:\s+(.*?)\n+(.*)/m)
+		array = raw_data.scan(/commit\s+(.*?)\n+Author:\s+(.*?)\n+Date:\s+(.*?)\n+(.*)/)
 		hashs = array.collect { |elements| { 'commit_id' => elements[0], 'author' => elements[1], 'date' => elements[2], 'message' => elements[3] }  }
 	end	
 end
