@@ -105,6 +105,7 @@ class GitJenkinsRemoteTrigger
 		else
 			command = "git log --quiet #{last_build_id}..HEAD #{module_name}"
 		end
+		puts command
 		logs_raw_data = %x[#{command}]
 		changes_since_last_build = analyze_multiple_commit_logs(logs_raw_data)
 		puts "changes since last build of #{module_name} #{changes_since_last_build}"
