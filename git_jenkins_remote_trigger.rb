@@ -73,7 +73,7 @@ class GitJenkinsRemoteTrigger
 		end
 		@module_job_mappings.each do |module_name, job_name|
 			working_file = initialize_working_file(job_name)
-			changes_since_last_build = get_changes_since_last_build(working_file)
+			changes_since_last_build = get_changes_since_last_build(working_file, module_name)
 			if not changes_since_last_build.empty?
 				commit_id = changes_since_last_build.first[:commit_id] 
 				unshift_this_build(changes_since_last_build, working_file, commit_id)
@@ -96,7 +96,7 @@ class GitJenkinsRemoteTrigger
 		working_file
 	end
 
-	def get_changes_since_last_build(working_file)
+	def get_changes_since_last_build(working_file, module_name)
 		build_data = YAML.load_file(working_file)
 		last_build_id = build_data['recent_builds'][0]['build_id']
 		if last_build_id == 'NONE'
