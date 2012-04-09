@@ -73,12 +73,10 @@ class GitJenkinsRemoteTrigger
 		end
 		@module_job_mappings.each do |module_name, job_name|
 			working_file = initialize_working_file(job_name)
-			result = %x[git log --quiet HEAD~..HEAD #{module_name}]
-			puts "Result of #{module_name} [#{result}]"
-			if not result.empty?
-				result =~ /commit\s+(.+)/
-				commit_id = $1
-				record_recent_builds(module_name, working_file, commit_id)
+			changes_since_last_build = get_changes_since_last_build(working_file)
+			if not changes_since_last_build.empty?
+				commit_id = changes_since_last_build.first[:commit_id] 
+				unshift_this_build(changes_since_last_build, working_file, commit_id)
 				trigger job_name, commit_id
 			end
 		end
@@ -98,7 +96,7 @@ class GitJenkinsRemoteTrigger
 		working_file
 	end
 
-	def record_recent_builds(module_name, working_file, commit_id)
+	def get_changes_since_last_build(working_file)
 		build_data = YAML.load_file(working_file)
 		last_build_id = build_data['recent_builds'][0]['build_id']
 		if last_build_id == 'NONE'
@@ -109,7 +107,10 @@ class GitJenkinsRemoteTrigger
 		logs_raw_data = %x[#{command}]
 		changes_since_last_build = analyze_multiple_commit_logs(logs_raw_data)
 		puts "changes_since_last_build #{changes_since_last_build}"
-		return if changes_since_last_build.empty?
+		changes_since_last_build
+	end
+
+	def unshift_this_build(changes_since_last_build, working_file, commit_id)
 		build_data['recent_builds'].unshift({ 'build_id' => commit_id, 'changes_since_last_build' => changes_since_last_build })
 		if (build_data['recent_builds'].length > @other_options[:MAX_TRACKED_BUILDS]) 
 			build_data['recent_builds'] = build_data['recent_builds'].take(@other_options[:MAX_TRACKED_BUILDS])
