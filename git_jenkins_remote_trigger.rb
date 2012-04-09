@@ -107,12 +107,12 @@ class GitJenkinsRemoteTrigger
 		end
 		logs_raw_data = %x[#{command}]
 		changes_since_last_build = analyze_multiple_commit_logs(logs_raw_data)
-		puts "changes_since_last_build #{changes_since_last_build}"
+		puts "changes since last build of #{module_name} #{changes_since_last_build}"
 		changes_since_last_build
 	end
 
 	def last_commit_id_of(changes_since_last_build)
-		commit_id = changes_since_last_build.first[:commit_id] 
+		commit_id = changes_since_last_build.first['commit_id'] 
 	end
 
 	def unshift_this_build(build_data, working_file, changes_since_last_build)
