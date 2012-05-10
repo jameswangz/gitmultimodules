@@ -41,6 +41,7 @@ class GitJenkinsRemoteTrigger
 		@running_options = running_options
 		@auth_options = auth_options		
 		@other_options = other_options
+		@branch = @other_options[:branch]
 		@working_dir = File.expand_path('.github_shared_repository', '~')
 		create_working_dir_if_required
 	end
@@ -66,7 +67,9 @@ class GitJenkinsRemoteTrigger
 	def run_once
 		create_or_switch_branch
 		return
-		pull_result = %x[git pull origin #{@other_options[:branch]}]
+		pull_cmd = "git pull origin #{@branch}"
+		puts pull_cmd
+		pull_result = %x[#{pull_cmd}]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
 		if pull_result.empty?
@@ -86,8 +89,18 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def create_or_switch_branch
-		branches = %x[git branch]
-		p branches	
+		branches_output = %x[git branch]
+		branches = branches_output.lines.collect do |e| 
+			e.strip =~ /(\*\s*)?(.+)/
+			$2
+		end
+		if branches.include? @branch
+			cmd = "git checkout #{@branch}"
+		else
+			cmd = "git checkout -b #{@branch} origin/#{@branch}"
+		end	
+		puts cmd
+		%x[#{cmd}]
 	end
 
 	def initialize_working_file(job_name)
