@@ -11,7 +11,7 @@
   <url>http://maven.apache.org</url>
   <scm>
 	<connection>scm:git:git@github.com:jameswangz/gitmultimodules.git</connection>
-	<url>scm:git:git@github.com:jameswangz/gitmultimodules.git</connection>
+	<url>scm:git:git@github.com:jameswangz/gitmultimodules.git</url>
 	<developerConnection>scm:git:git@github.com:jameswangz/gitmultimodules.git</developerConnection>
   </scm>
 
