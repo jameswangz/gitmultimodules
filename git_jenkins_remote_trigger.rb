@@ -96,7 +96,6 @@ class GitJenkinsRemoteTrigger
 			branches[$2] = !$1.nil?
 		end
 		puts branches
-		return
 		if branches.has_key? @branch
 			current = branches[@branch]
 			cmd = "git checkout #{@branch}" unless current
