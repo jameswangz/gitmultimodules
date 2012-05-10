@@ -34,7 +34,7 @@ class GitJenkinsRemoteTrigger
 		module_job_mappings, 
 		running_options = { :only_once => true }, 
 		auth_options = { :required => false },
-		other_options = { :commit_id_param_name => 'GIT_COMMIT_ID'	}
+		other_options = { :branch => 'master', :commit_id_param_name => 'GIT_COMMIT_ID', :max_tracked_builds => 10	}
 	)	
 		@jenkins = jenkins
 		@module_job_mappings = module_job_mappings
