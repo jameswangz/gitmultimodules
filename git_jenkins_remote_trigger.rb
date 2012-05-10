@@ -66,7 +66,6 @@ class GitJenkinsRemoteTrigger
 
 	def run_once
 		create_or_switch_branch
-		return
 		pull_cmd = "git pull origin #{@branch}"
 		puts pull_cmd
 		pull_result = %x[#{pull_cmd}]
@@ -95,7 +94,6 @@ class GitJenkinsRemoteTrigger
 			e.strip =~ /(\*\s*)?(.+)/
 			branches[$2] = !$1.nil?
 		end
-		puts branches
 		if branches.has_key? @branch
 			current = branches[@branch]
 			cmd = "git checkout #{@branch}" unless current
@@ -104,8 +102,10 @@ class GitJenkinsRemoteTrigger
 			%x[git pull origin]
 			cmd = "git checkout -b #{@branch} origin/#{@branch}"
 		end	
-		puts cmd
-		%x[#{cmd}] if cmd
+		if cmd
+			puts cmd
+			%x[#{cmd}]
+		end
 	end
 
 	def initialize_working_file(job_name)
