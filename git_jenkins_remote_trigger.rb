@@ -97,6 +97,8 @@ class GitJenkinsRemoteTrigger
 		if branches.include? @branch
 			cmd = "git checkout #{@branch}"
 		else
+			# The branch doesn't exist, we need to update the remote branch info and create it
+			%x[git pull origin]
 			cmd = "git checkout -b #{@branch} origin/#{@branch}"
 		end	
 		puts cmd
