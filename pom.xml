@@ -4,7 +4,7 @@
 
   <groupId>com.quest.eu.gitmultimodules</groupId>
   <artifactId>gitmultimodules</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>gitmultimodules</name>

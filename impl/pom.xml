@@ -4,11 +4,11 @@
   <parent>
     <artifactId>gitmultimodules</artifactId>
     <groupId>com.quest.eu.gitmultimodules</groupId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
   </parent>
   <groupId>com.quest.eu.gitmultimodules</groupId>
   <artifactId>impl</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <name>impl</name>
   <dependencies>
     <dependency>
