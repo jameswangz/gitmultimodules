@@ -34,7 +34,7 @@ class GitJenkinsRemoteTrigger
 		module_job_mappings, 
 		running_options = { :only_once => true }, 
 		auth_options = { :required => false },
-		other_options = { :COMMIT_ID_PARAM_NAME => 'GIT_COMMIT_ID'	}
+		other_options = { :commit_id_param_name => 'GIT_COMMIT_ID'	}
 	)	
 		@jenkins = jenkins
 		@module_job_mappings = module_job_mappings
@@ -118,15 +118,15 @@ class GitJenkinsRemoteTrigger
 
 	def unshift_this_build(build_data, working_file, changes_since_last_build)
 		build_data['recent_builds'].unshift({ 'build_id' => last_commit_id_of(changes_since_last_build), 'changes_since_last_build' => changes_since_last_build })
-		if (build_data['recent_builds'].length > @other_options[:MAX_TRACKED_BUILDS]) 
-			build_data['recent_builds'] = build_data['recent_builds'].take(@other_options[:MAX_TRACKED_BUILDS])
+		if (build_data['recent_builds'].length > @other_options[:max_tracked_builds]) 
+			build_data['recent_builds'] = build_data['recent_builds'].take(@other_options[:max_tracked_builds])
 		end	
 		File.open(working_file, 'w') { |f| f.write(build_data.to_yaml) }
 	end	
 
 	def trigger(job_name, commit_id)
 		puts "triggering job #{job_name}"
-		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?#{@other_options[:COMMIT_ID_PARAM_NAME]}=#{commit_id}")			
+		uri = URI("#{@jenkins}/job/#{job_name}/buildWithParameters?#{@other_options[:commit_id_param_name]}=#{commit_id}")			
 		puts uri
 		begin
 			if @auth_options[:required] 
