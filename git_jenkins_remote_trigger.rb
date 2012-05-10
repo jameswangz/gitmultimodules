@@ -90,19 +90,23 @@ class GitJenkinsRemoteTrigger
 
 	def create_or_switch_branch
 		branches_output = %x[git branch]
-		branches = branches_output.lines.collect do |e| 
+		branches = {}
+		branches_output.lines.each do |e| 
 			e.strip =~ /(\*\s*)?(.+)/
-			$2
+			branches[$2] = !$1.nil?
 		end
-		if branches.include? @branch
-			cmd = "git checkout #{@branch}"
+		puts branches
+		return
+		if branches.has_key? @branch
+			current = branches[@branch]
+			cmd = "git checkout #{@branch}" unless current
 		else
 			# The branch doesn't exist, we need to update the remote branch info and create it
 			%x[git pull origin]
 			cmd = "git checkout -b #{@branch} origin/#{@branch}"
 		end	
 		puts cmd
-		%x[#{cmd}]
+		%x[#{cmd}] if cmd
 	end
 
 	def initialize_working_file(job_name)
