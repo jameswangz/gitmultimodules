@@ -9,6 +9,11 @@
 
   <name>gitmultimodules</name>
   <url>http://maven.apache.org</url>
+  <scm>
+	<connection>scm:git:git@github.com:jameswangz/gitmultimodules.git</connection>
+	<url>scm:git:git@github.com:jameswangz/gitmultimodules.git</connection>
+	<developerConnection>scm:git:git@github.com:jameswangz/gitmultimodules.git</developerConnection>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
