@@ -64,7 +64,8 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def run_once
-		pull_result = %x[git pull origin master]
+		create_or_switch_branch
+		pull_result = %x[git pull origin #{@other_options[:branch]}]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
 		if pull_result.empty?
@@ -83,6 +84,10 @@ class GitJenkinsRemoteTrigger
 		end
 	end
 
+	def create_or_switch_branch
+		branches = %s[git branch]
+		p branches	
+	end
 
 	def initialize_working_file(job_name)
 		working_file = File.expand_path("#{job_name}.yml", @working_dir)
