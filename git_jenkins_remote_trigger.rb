@@ -65,6 +65,7 @@ class GitJenkinsRemoteTrigger
 
 	def run_once
 		create_or_switch_branch
+		return
 		pull_result = %x[git pull origin #{@other_options[:branch]}]
 		puts pull_result
 		return if pull_result.include? 'Already up-to-date'
@@ -85,7 +86,7 @@ class GitJenkinsRemoteTrigger
 	end
 
 	def create_or_switch_branch
-		branches = %s[git branch]
+		branches = %x[git branch]
 		p branches	
 	end
 
